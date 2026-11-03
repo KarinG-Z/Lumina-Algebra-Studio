@@ -82,8 +82,5 @@ Consulta la guía [`PUBLICAR_EN_GITHUB.md`](PUBLICAR_EN_GITHUB.md) para publicar
 
 El flujo de GitHub Actions (`.github/workflows/python-tests.yml`) ejecuta las pruebas automáticamente cuando subes cambios.
 
-## Qué enviar al profesor
-Adjuntar el **ZIP completo** (no solo un HTML o un `.py`). Opcionalmente, añadir dos capturas o un PDF breve mostrando ambos ejercicios y sus resultados. El profesor solo necesita instalar Python 3 y abrir `INICIAR_LUMINA.bat`.
-
 ## Nota de autoría
 Revisa el código, practica el procedimiento algebraico y prepara una explicación propia de cada parte antes de presentarlo.
