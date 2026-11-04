@@ -76,11 +76,5 @@ python -m unittest discover -s tests -v
 
 **Arquitectura:** las matemáticas se resuelven en Python. HTML organiza el contenido; CSS lo diseña; JavaScript presenta la solución. Funciona localmente, sin Internet ni librerías de terceros.
 
-## Repositorio en GitHub
-
-Consulta la guía [`PUBLICAR_EN_GITHUB.md`](PUBLICAR_EN_GITHUB.md) para publicar el proyecto desde VS Code usando GitHub CLI o Git.
-
-El flujo de GitHub Actions (`.github/workflows/python-tests.yml`) ejecuta las pruebas automáticamente cuando subes cambios.
-
 ## Nota de autoría
 Revisa el código, practica el procedimiento algebraico y prepara una explicación propia de cada parte antes de presentarlo.
