@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f7f3fb">
     <title>Lúmina · Álgebra Studio</title>
     <meta name="description"
-        content="Resuelve sistemas de ecuaciones lineales 2×2 con métodos, comprobación exacta y gráficos.">
+        content="Resuelve sistemas de ecuaciones lineales 2×2 y 3×3 con métodos, comprobación exacta y gráficos.">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 
@@ -34,47 +34,55 @@
             </nav>
             <div class="sidebar-bottom" id="guide"><span class="badge-small">PARA TU CLASE</span><strong>Aprende el
                     proceso,<br>no solo la respuesta.</strong>
-                <p>Explora cada paso, observa la intersección y comprueba tus resultados.</p>
+                <p>Elige sistemas 2×2 o 3×3 para resolver incógnitas. Para la guía de matrices, selecciona Determinantes · Sarrus y un ejercicio a–h. Admite 3, −2, 0.5 y 3/4. Comprueba cada igualdad.</p>
             </div>
             <div class="sidebar-foot">Diseño educativo · Python 3</div>
         </aside>
         <main class="main">
             <div class="topbar">
-                <div class="crumb">Inicio <span style="margin:0 7px">/</span> <strong>Sistemas lineales 2×2</strong>
+                <div class="crumb">Inicio <span style="margin:0 7px">/</span> <strong id="mode-title">Sistemas lineales 2×2</strong>
                 </div>
                 <div class="status"><span class="dot"></span> Cálculo exacto con fracciones</div>
             </div>
             <section class="hero">
                 <div class="overline">✦ TU LABORATORIO MATEMÁTICO</div>
                 <h1>Resuelve, comprende<br>y visualiza cada ecuación.</h1>
-                <p>Un espacio interactivo para resolver sistemas de dos incógnitas con procedimientos explicados y
+                <p>Un espacio interactivo para resolver sistemas de dos o tres incógnitas con procedimientos explicados y
                     resultados comprobados.</p>
                 <div class="hero-bottom"><span class="hero-tag">✧ Paso a paso</span><span class="hero-tag">⌁ Gráficas
                         interactivas</span><span class="hero-tag">✓ Comprobación exacta</span></div>
             </section>
-            <section class="presets-section">
+            <div class="dimension-tabs" role="group" aria-label="Dimensión del sistema">
+                    <button type="button" class="method selected" id="mode2" aria-pressed="true" onclick="setDimension(2)">Sistema 2×2</button>
+                    <button type="button" class="method" id="mode3" aria-pressed="false" onclick="setDimension(3)">Sistema 3×3</button>
+                    <button type="button" class="method" id="mode-sarrus" aria-pressed="false" onclick="setSarrus()">Determinantes · Sarrus</button>
+                </div>
+            <section class="presets-section" id="system-presets">
                 <div class="section-heading">
                     <h2>Comienza con tus ejercicios</h2><small>Selecciona un caso para cargarlo</small>
                 </div>
-                <div class="preset-row"><button class="preset active" id="preset-sustitucion"
+                <div class="preset-row" id="presets2"><button class="preset active" id="preset-sustitucion"
                         onclick="loadPreset('sustitucion')"><span class="preset-no">01</span><span
                             style="flex:1"><strong>Método de sustitución</strong><small>3x − y = 7 &nbsp; · &nbsp; x +
                                 2y = 4</small></span><span class="preset-arrow">›</span></button><button class="preset"
                         id="preset-igualacion" onclick="loadPreset('igualacion')"><span class="preset-no">02</span><span
                             style="flex:1"><strong>Método de igualación</strong><small>5x + 2y = 16 &nbsp; · &nbsp; x −
                                 y = 1</small></span><span class="preset-arrow">›</span></button></div>
+                <button type="button" class="preset" id="preset3" hidden onclick="loadPreset3()"><span class="preset-no">03</span><span><strong>Determinantes 3×3</strong><small>Ejemplo guiado · x = 2, y = 3, z = −1</small></span></button>
             </section>
-            <div class="workspace">
+            <section class="presets-section" id="sarrus-presets" hidden><div class="section-heading"><h2>Ejercicios de la guía · a–h</h2><small>Carga una matriz y explora sus seis diagonales</small></div><div class="sarrus-presets" id="sarrus-preset-buttons"></div></section>
+            <div class="print-heading" id="print-heading">LÚMINA · Sistema 2×2</div><div class="workspace">
                 <div class="left-col">
                     <section class="panel input-panel">
                         <div class="panel-header">
                             <div>
-                                <div class="panel-title">Configura tu sistema</div>
-                                <div class="panel-sub">Introduce los seis coeficientes.</div>
+                                <div class="panel-title" id="input-title">Configura tu sistema</div>
+                                <div class="panel-sub" id="input-help">Introduce los seis coeficientes.</div>
                             </div>
                             <div class="mini-icon">∑</div>
                         </div>
-                        <div class="kicker">01 / ECUACIONES LINEALES</div>
+                        <div class="kicker" id="input-kicker">01 / ECUACIONES LINEALES</div>
+                        <div id="equations2">
                         <div class="eqrow"><span class="rowmark">E1</span><input class="num" id="a"
                                 aria-label="Coeficiente de x de la ecuación 1" value="3" inputmode="decimal"><span
                                 class="eq-label">x +</span><input class="num" id="b"
@@ -87,16 +95,20 @@
                                 aria-label="Coeficiente de y de la ecuación 2" value="2" inputmode="decimal"><span
                                 class="eq-label">y =</span><input class="num rhs" id="h"
                                 aria-label="Resultado de la ecuación 2" value="4" inputmode="decimal"></div>
+                        </div><div id="equations3" hidden><div class="eqrow eqrow3"><span class="rowmark">E1</span><input class="num" id="v0" aria-label="Coeficiente de x de la ecuación 1" value="2" inputmode="text"><span class="eq-label">x +</span><input class="num" id="v1" aria-label="Coeficiente de y de la ecuación 1" value="1" inputmode="text"><span class="eq-label">y +</span><input class="num" id="v2" aria-label="Coeficiente de z de la ecuación 1" value="-1" inputmode="text"><span class="eq-label">z =</span><input class="num" id="v3" aria-label="Término independiente de la ecuación 1" value="8" inputmode="text"></div><div class="eqrow eqrow3"><span class="rowmark">E2</span><input class="num" id="v4" aria-label="Coeficiente de x de la ecuación 2" value="-3" inputmode="text"><span class="eq-label">x +</span><input class="num" id="v5" aria-label="Coeficiente de y de la ecuación 2" value="-1" inputmode="text"><span class="eq-label">y +</span><input class="num" id="v6" aria-label="Coeficiente de z de la ecuación 2" value="2" inputmode="text"><span class="eq-label">z =</span><input class="num" id="v7" aria-label="Término independiente de la ecuación 2" value="-11" inputmode="text"></div><div class="eqrow eqrow3"><span class="rowmark">E3</span><input class="num" id="v8" aria-label="Coeficiente de x de la ecuación 3" value="-2" inputmode="text"><span class="eq-label">x +</span><input class="num" id="v9" aria-label="Coeficiente de y de la ecuación 3" value="1" inputmode="text"><span class="eq-label">y +</span><input class="num" id="v10" aria-label="Coeficiente de z de la ecuación 3" value="2" inputmode="text"><span class="eq-label">z =</span><input class="num" id="v11" aria-label="Término independiente de la ecuación 3" value="-3" inputmode="text"></div></div>
+<div id="matrix-inputs" hidden><div class="matrix-editor" role="group" aria-label="Entradas de la matriz 3 por 3"><input class="num" id="m0" value="3" inputmode="text" aria-label="Fila 1, columna 1"><input class="num" id="m1" value="2" inputmode="text" aria-label="Fila 1, columna 2"><input class="num" id="m2" value="1" inputmode="text" aria-label="Fila 1, columna 3"><input class="num" id="m3" value="5" inputmode="text" aria-label="Fila 2, columna 1"><input class="num" id="m4" value="-2" inputmode="text" aria-label="Fila 2, columna 2"><input class="num" id="m5" value="-3" inputmode="text" aria-label="Fila 2, columna 3"><input class="num" id="m6" value="-2" inputmode="text" aria-label="Fila 3, columna 1"><input class="num" id="m7" value="4" inputmode="text" aria-label="Fila 3, columna 2"><input class="num" id="m8" value="4" inputmode="text" aria-label="Fila 3, columna 3"></div></div>
                         <div class="equation-preview" id="equation-preview"><span>3x − y = 7</span><span>x + 2y =
                                 4</span></div>
                         <div class="kicker">02 / ELIGE UN MÉTODO</div>
-                        <div class="method-tabs" role="group" aria-label="Método de solución"><button
+                        <div id="methods2" class="method-tabs" role="group" aria-label="Método de solución"><button
                                 class="method selected" data-method="sustitucion"
                                 onclick="selectMethod('sustitucion')">✦ Sustitución</button><button class="method"
                                 data-method="igualacion" onclick="selectMethod('igualacion')">◇
                                 Igualación</button><button class="method" data-method="reduccion"
                                 onclick="selectMethod('reduccion')">⊕ Reducción</button><button class="method"
                                 data-method="cramer" onclick="selectMethod('cramer')">▦ Regla de Cramer</button></div>
+                        <div id="methods3" hidden><button type="button" class="method selected" aria-pressed="true">▦ Determinantes 3×3 (regla de Cramer)</button></div>
+<div id="method-sarrus" hidden class="sarrus-help">↘ Suma los tres productos descendentes.<br>↗ Resta la suma de los tres productos ascendentes.</div>
                         <button class="btn-primary" id="solve-btn" onclick="runSolve()"><span>✧</span> Resolver sistema
                             <span style="font-size:18px">→</span></button>
                         <div class="shortcut">También puedes presionar Ctrl + Enter</div>
@@ -110,7 +122,7 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Comprobación</div>
-                                <div class="panel-sub">¿Funcionan los valores en ambas ecuaciones?</div>
+                                <div class="panel-sub" id="check-help">¿Funcionan los valores en cada ecuación?</div>
                             </div>
                             <div class="mini-icon">✓</div>
                         </div>
@@ -124,7 +136,7 @@
                         <div class="panel-header">
                             <div>
                                 <div class="panel-title">Resultados y representación</div>
-                                <div class="panel-sub">Valores exactos y ubicación en el plano cartesiano.</div>
+                                <div class="panel-sub">Valores exactos, aproximaciones y representación matemática.</div>
                             </div>
                             <div class="mini-icon">✧</div>
                         </div>
@@ -133,7 +145,7 @@
                                     Preparado</span></div>
                             <p class="solution-description">Selecciona un ejercicio y presiona «Resolver sistema».</p>
                         </div>
-                        <div class="chart-header"><strong>Visualización geométrica</strong>
+                        <div id="graph-section"><div class="chart-header"><strong>Visualización geométrica</strong>
                             <div class="legend"><span class="legend-item"><span class="legend-line"
                                         style="background:#9066bc"></span>Ecuación 1</span><span
                                     class="legend-item"><span class="legend-line"
@@ -141,7 +153,8 @@
                         </div><svg id="graph" class="plot" viewBox="0 0 720 350" role="img"
                             aria-label="Gráfica de las ecuaciones en el plano"></svg>
                         <div class="solution-description" id="graph-note">Las rectas muestran el comportamiento de ambas
-                            ecuaciones.</div>
+                            ecuaciones.</div></div>
+                        <div id="matrix-view" hidden aria-live="polite"></div>
                     </section>
                     <section class="panel">
                         <div class="panel-header">
@@ -159,7 +172,7 @@
                     </section>
                 </div>
             </div>
-            <div class="footer"><span><strong>LÚMINA</strong> · Álgebra Studio · Sistemas 2×2</span><span>Proyecto
+            <div class="footer"><span><strong>LÚMINA</strong> · Álgebra Studio · Sistemas 2×2 y 3×3 · Sarrus</span><span>Proyecto
                     académico · Python + HTML + CSS + JavaScript</span></div>
         </main>
     </div>

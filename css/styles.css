@@ -1033,3 +1033,57 @@ input:focus-visible {
         margin: 18mm
     }
 }
+/* Sistemas 3×3: matrices exactas y selector de dimensión */
+[hidden] { display: none !important; }
+.dimension-tabs { display: flex; gap: 10px; margin-top: 22px; }
+.dimension-tabs .method { flex: 1; padding: 14px; }
+#methods3 .method { width: 100%; margin-bottom: 16px; padding: 12px; }
+#equations3 .eqrow3 { display: grid; grid-template-columns: 20px minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); gap: 5px; }
+#equations3 .num { width: 100%; min-width: 0; padding: 9px 2px; }
+#equations3 .eq-label { font-size: 14px; white-space: nowrap; }
+.determinant-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.determinant-card { background: linear-gradient(145deg,#f4edfc,#fff1f6); border: 1px solid var(--border); border-radius: 16px; padding: 16px; overflow-x: auto; }
+.determinant-card strong { color: var(--deep); overflow-wrap: anywhere; }
+.matrix { border-left: 2px solid var(--purple); border-right: 2px solid var(--purple); margin: 12px auto 0; border-radius: 7px; font-variant-numeric: tabular-nums; }
+.matrix td { text-align: center; padding: 5px 9px; }
+.matrix caption { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.solution-grid.three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.mathline { white-space: pre-wrap; overflow-wrap: anywhere; }
+.step-card > div { min-width: 0; }
+.print-heading { display: none; }
+@media(max-width:450px) {
+  .solution-grid.three { grid-template-columns: 1fr; }
+  .determinant-grid { grid-template-columns: 1fr; }
+  #equations3 .eqrow3 { gap: 3px; grid-template-columns: 16px minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr); }
+  #equations3 .eq-label { font-size: 12px; }
+}
+@media print {
+  .dimension-tabs { display: none; }
+  .print-heading { display: block; font-weight: 700; margin-bottom: 16px; }
+  .steps.panel, .panel:has(.steps) { break-inside: auto; }
+  .determinant-card { break-inside: avoid; }
+}
+
+/* Taller de determinantes por Sarrus */
+.dimension-tabs { flex-wrap: wrap; }
+.dimension-tabs .method { min-width: 140px; }
+.matrix-editor { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding: 16px; border-inline: 2px solid var(--purple); border-radius: 12px; margin-bottom: 18px; }
+.matrix-editor .num { width: 100%; min-width: 0; }
+.sarrus-presets { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.sarrus-presets .preset { min-width: 0; flex-direction: column; align-items: flex-start; }
+.sarrus-help, .sarrus-summary { padding: 14px; border-radius: 12px; background: var(--rose); color: var(--deep); margin-bottom: 16px; }
+.sarrus-matrix-wrap { overflow-x: auto; margin-bottom: 18px; }
+.sarrus-matrix td { min-width: 44px; transition: background .15s; }
+.sarrus-matrix td.repeated { background: #f1ebf9; border-left: 1px dashed #cbb9df; }
+.sarrus-matrix td.diagonal-down { background: #e0c5fa; color: #40205e; outline: 2px solid #7751b5; }
+.sarrus-matrix td.diagonal-up { background: #ffd1e0; color: #6b2140; outline: 2px solid #c34e7c; }
+.diagonal-products { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+.diagonal-product { border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; gap: 12px; text-align: left; background: #faf7fd; color: var(--ink); }
+.diagonal-product span { overflow-wrap: anywhere; min-width: 0; }
+.diagonal-product.up { background: #fff3f7; }
+.diagonal-product[aria-pressed=true] { border-color: var(--purple); box-shadow: 0 0 0 2px var(--lavender); }
+@media(max-width:600px) { .sarrus-presets { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media print { .sarrus-presets { display: none; } .diagonal-product { break-inside: avoid; } }
+
+.matrix-editor .num { border: 1px solid #e5d8f2; border-radius: 10px; padding: 12px 5px; text-align: center; background: var(--field); color: var(--deep); font-weight: 650; }
+.determinant-result { font: bold 29px/1.5 Georgia,serif; color: var(--deep); margin-top: 12px; overflow-wrap: anywhere; }

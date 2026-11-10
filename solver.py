@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Operaciones de álgebra lineal 2×2 y procedimientos detallados.
+"""Operaciones de álgebra lineal 2×2 y 3×3 y procedimientos detallados.
 
 Este módulo es independiente de la interfaz: Python calcula, JavaScript presenta.
 Se usa Fraction para preservar resultados exactos.
@@ -17,7 +17,7 @@ PRESETS = {
 def number(value):
     """Acepta enteros, decimales o fracciones como 3/4 sin usar eval()."""
     if isinstance(value, bool) or not isinstance(value, (int, str, float)):
-        raise ValueError("Escribe números válidos en los seis campos.")
+        raise ValueError("Escribe números válidos en todos los campos.")
     raw = str(value).strip().replace(",", ".").replace("−", "-")
     if not raw or len(raw) > 32:
         raise ValueError("Completa todos los campos con números razonables.")
@@ -215,11 +215,21 @@ def cramer(a,b,c,d,e,h,x,y):
 def solve(payload: dict) -> dict:
     if not isinstance(payload, dict):
         raise ValueError("Los datos de la solicitud no son válidos.")
+    operation = payload.get("operation", "system")
+    if operation not in ("system", "determinant"):
+        raise ValueError("Selecciona una operación válida.")
+    if operation == "determinant":
+        return solve_sarrus(payload)
+    dimension = payload.get("dimension", 2)
+    if type(dimension) is not int or dimension not in (2, 3):
+        raise ValueError("La dimensión debe ser 2 o 3.")
+    if dimension == 3:
+        return solve3(payload)
     values = payload.get("values")
     method = payload.get("method", "sustitucion")
     if not isinstance(values, list) or len(values) != 6:
         raise ValueError("El sistema debe contener seis coeficientes.")
-    if method not in {"sustitucion", "igualacion", "reduccion", "cramer"}:
+    if not isinstance(method, str) or method not in {"sustitucion", "igualacion", "reduccion", "cramer"}:
         raise ValueError("Selecciona un método válido.")
     a,b,c,d,e,h = [number(v) for v in values]
     D = a*e-b*d
@@ -254,3 +264,169 @@ def solve(payload: dict) -> dict:
             "steps":details,"checks":check_lines(a,b,c,d,e,h,x,y)}
 
 
+
+
+def determinant3(matrix):
+    """Expansión por la primera fila: +, −, +; siempre exacta."""
+    a, b, c = matrix[0]
+    d, e, g = matrix[1]
+    h, i, j = matrix[2]
+    return a*(e*j-g*i) - b*(d*j-g*h) + c*(d*i-e*h)
+
+
+def matrix_lines(matrix):
+    return ["[ " + "   ".join(f(v) for v in row) + " ]" for row in matrix]
+
+
+def determinant_detail(matrix):
+    a, b, c = matrix[0]
+    d, e, g = matrix[1]
+    h, i, j = matrix[2]
+    return (f"({f(a)})[({f(e)})({f(j)}) − ({f(g)})({f(i)})]"
+            f" − ({f(b)})[({f(d)})({f(j)}) − ({f(g)})({f(h)})]"
+            f" + ({f(c)})[({f(d)})({f(i)}) − ({f(e)})({f(h)})]")
+
+
+def exact_ranks(augmented):
+    """Gauss-Jordan en las tres columnas de A, con registro de operaciones."""
+    rows = [row[:] for row in augmented]
+    pivot = 0
+    operations = []
+    for col in range(3):
+        selected = next((r for r in range(pivot, 3) if rows[r][col]), None)
+        if selected is None:
+            continue
+        if selected != pivot:
+            rows[pivot], rows[selected] = rows[selected], rows[pivot]
+            operations.append(f"F{pivot+1} ↔ F{selected+1}")
+        scale = rows[pivot][col]
+        rows[pivot] = [v/scale for v in rows[pivot]]
+        operations.append(f"F{pivot+1} ← F{pivot+1} / ({f(scale)})")
+        for r in range(3):
+            if r != pivot and rows[r][col]:
+                scale = rows[r][col]
+                rows[r] = [v-scale*w for v, w in zip(rows[r], rows[pivot])]
+                operations.append(f"F{r+1} ← F{r+1} − ({f(scale)})F{pivot+1}")
+        pivot += 1
+    contradiction = any(not any(row[:3]) and row[3] for row in rows)
+    return pivot, pivot + int(contradiction), rows, operations
+
+
+def solve3(payload):
+    method = payload.get("method", "cramer3")
+    if method != "cramer3":
+        raise ValueError("Para 3×3 selecciona Determinantes 3×3 (regla de Cramer).")
+    values = payload.get("values")
+    if not isinstance(values, list) or len(values) != 12:
+        raise ValueError("El sistema 3×3 debe contener doce coeficientes.")
+    values = [number(v) for v in values]
+    rows = [values[i:i+4] for i in range(0, 12, 4)]
+    matrix = [row[:3] for row in rows]
+    rhs = [row[3] for row in rows]
+    equations = []
+    for row in rows:
+        expression3 = ""
+        for coef, variable in zip(row[:3], "xyz"):
+            expression3 += term(coef, variable, not bool(expression3))
+        equations.append(f"{expression3 or '0'} = {f(row[3])}")
+    determinants = {}
+    details = [step("Escribir A · (x, y, z)ᵀ = b", *equations,
+                    "Matriz A:", *matrix_lines(matrix), "Vector b: " + str([f(v) for v in rhs]))]
+    for column, name in [(-1, "D"), (0, "Dx"), (1, "Dy"), (2, "Dz")]:
+        current = [row[:] for row in matrix]
+        if column >= 0:
+            for r in range(3):
+                current[r][column] = rhs[r]
+        value = determinant3(current)
+        determinants[name] = {"value": f(value), "matrix": [[f(v) for v in row] for row in current]}
+        details.append(step(f"Calcular {name}", *matrix_lines(current),
+                            name + " = " + determinant_detail(current) + " = " + f(value),
+                            note="Expansión por la primera fila con signos +, −, +." if column < 0 else
+                            f"Reemplazamos la columna de {'xyz'[column]} por el vector b y expandimos con signos +, −, +."))
+    common = {"ok": True, "dimension": 3, "method": method,
+              "methodLabel": "Determinantes 3×3 (regla de Cramer)",
+              "equations": equations, "determinants": determinants, "steps": details}
+    D = determinant3(matrix)
+    if not D:
+        rank_a, rank_aug, reduced, operations = exact_ranks(rows)
+        infinite = rank_a == rank_aug
+        explanation = ("Los rangos son iguales y menores que 3: hay infinitas soluciones."
+                       if infinite else "El rango de A es menor que el de [A|b]: el sistema es incompatible.")
+        details.append(step("Clasificar mediante eliminación exacta", *operations,
+                            "Matriz reducida [A|b]:", *matrix_lines(reduced),
+                            f"rango(A) = {rank_a}; rango([A|b]) = {rank_aug}", explanation,
+                            note="D = 0: no podemos dividir por D; los rangos deciden la compatibilidad."))
+        return {**common, "status": "infinite" if infinite else "none", "result": None,
+                "headline": "Infinitas soluciones" if infinite else "Sin solución",
+                "explanation": explanation, "ranks": {"A": rank_a, "augmented": rank_aug}, "checks": []}
+    solution = []
+    for col in range(3):
+        replaced = [[rhs[r] if c == col else matrix[r][c] for c in range(3)] for r in range(3)]
+        solution.append(determinant3(replaced)/D)
+    result = {}
+    lines = []
+    for variable, value, name in zip("xyz", solution, ("Dx", "Dy", "Dz")):
+        result.update({variable: f(value), variable+"Decimal": dec(value)})
+        lines.append(f"{variable} = {name}/D = ({determinants[name]['value']}) / ({f(D)}) = {f(value)} ≈ {dec(value)}")
+    details.append(step("Aplicar la regla de Cramer", *lines, note="D ≠ 0: existe una solución única."))
+    checks = []
+    for i, row in enumerate(rows):
+        actual = sum((a*b for a, b in zip(row[:3], solution)), Fraction(0))
+        substitution = " + ".join(f"({f(a)})({f(b)})" for a, b in zip(row[:3], solution))
+        checks.append({"equation": f"Ecuación {i+1}", "detail": f"{substitution} = {f(actual)} = {f(row[3])}",
+                       "expected": f(row[3]), "pass": actual == row[3]})
+    return {**common, "status": "unique", "headline": "Solución única encontrada",
+            "explanation": "Los valores satisfacen simultáneamente las tres ecuaciones.",
+            "result": result, "checks": checks}
+
+
+# Los seis productos conservan sus signos antes de restar los ascendentes.
+def solve_sarrus(payload):
+    dimension = payload.get("dimension", 3)
+    if type(dimension) is not int or dimension != 3:
+        raise ValueError("Sarrus requiere una matriz de dimensión 3.")
+    if payload.get("method", "sarrus") != "sarrus":
+        raise ValueError("Selecciona el método Sarrus para el determinante.")
+    values = payload.get("values")
+    if not isinstance(values, list) or len(values) != 9:
+        raise ValueError("La matriz 3×3 debe contener nueve entradas, por filas.")
+    values = [number(v) for v in values]
+    matrix = [values[i:i+3] for i in range(0,9,3)]
+    extended = [row + row[:2] for row in matrix]
+    paths = [([0,c],[1,c+1],[2,c+2]) for c in range(3)]
+    paths += [([2,c],[1,c+1],[0,c+2]) for c in range(3)]
+    products = []
+    exact_products = []
+    for i, path in enumerate(paths):
+        factors = [extended[r][c] for r,c in path]
+        value = factors[0]*factors[1]*factors[2]
+        exact_products.append(value)
+        name = ("P" if i < 3 else "Q") + str(i%3+1)
+        formula = " · ".join("("+f(v)+")" for v in factors)
+        products.append({"name":name,"direction":"down" if i<3 else "up",
+                         "path":path,"value":f(value),"formula":formula})
+    down = sum(exact_products[:3], Fraction(0))
+    up = sum(exact_products[3:], Fraction(0))
+    result = down-up
+    reference = determinant3(matrix)
+    details = [
+        step("Escribir la matriz original", *matrix_lines(matrix), note="Leemos las nueve entradas por filas."),
+        step("Repetir las dos primeras columnas a la derecha", *matrix_lines(extended),
+             note="La matriz auxiliar tiene tres filas y cinco columnas; solo sirve para seguir las diagonales."),
+        step("Multiplicar las diagonales descendentes ↘", *[item["name"]+" = "+item["formula"]+" = "+item["value"] for item in products[:3]],
+             "S↘ = " + " + ".join("("+item["value"]+")" for item in products[:3]) + " = " + f(down)),
+        step("Multiplicar las diagonales ascendentes ↗", *[item["name"]+" = "+item["formula"]+" = "+item["value"] for item in products[3:]],
+             "S↗ = " + " + ".join("("+item["value"]+")" for item in products[3:]) + " = " + f(up)),
+        step("Restar las sumas: det(A) = S↘ − S↗", f"det(A) = ({f(down)}) − ({f(up)}) = {f(result)}",
+             f"det(A) ≈ {dec(result)}", note="Restamos la suma ascendente completa, conservando los signos de los productos."),
+        step("Comprobar por expansión de la primera fila", "det(A) = "+determinant_detail(matrix)+" = "+f(reference),
+             note="La expansión independiente confirma el resultado de Sarrus.")]
+    return {"ok":True,"operation":"determinant","dimension":3,"method":"sarrus",
+            "methodLabel":"Regla de Sarrus", "status":"determinant", "headline":"Determinante calculado",
+            "explanation":"det(A) = suma descendente − suma ascendente. " +
+                ("El determinante es cero: la matriz es singular." if not result else "El determinante es distinto de cero: la matriz es invertible."),
+            "equations":matrix_lines(matrix), "matrix":[[f(v) for v in row] for row in matrix],
+            "extendedMatrix":[[f(v) for v in row] for row in extended], "products":products,
+            "sums":{"down":f(down),"up":f(up)},"result":{"determinant":f(result),"decimal":dec(result)},
+            "steps":details,"checks":[{"equation":"Expansión por cofactores", "detail":"det(A) = "+f(reference),
+            "expected":f(result),"pass":reference==result}]}
